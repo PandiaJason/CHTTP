@@ -39,7 +39,8 @@
 
 volatile sig_atomic_t shutdown_requested = 0;
 
-void handle_shutdown(int signum) {
+void handle_shutdown(int signum) 
+{
     shutdown_requested = 1;
 }
 
