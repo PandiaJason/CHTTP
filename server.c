@@ -123,6 +123,11 @@ int main(void)
 void handle_client(int client_socket) 
 {
     char buffer[BUFFER_SIZE];
+
+    /*  "ssize" stands for "signed size." It is commonly employed in functions that perform I/O operations,
+     such as reading or writing data, where the return value indicates the number of bytes processed.
+
+        */
     ssize_t received_bytes;
 
     /* Receive data from the client */
