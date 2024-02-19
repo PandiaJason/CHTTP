@@ -1,13 +1,13 @@
-# CHTTP
-**Simple Server Client with Linux Socket Programming.**
-
 ---
 title: CHTTP
 mail: pandiajason@gmail.com
 author: Jason Pandain
-type: Simple Server Client with Linux/C Socket Progamming
+type: Simple Server Client with Linux/C Socket Programming
 date: 17-02-2024
 ---
+
+# CHTTP
+**Simple Server Client with Linux Socket Programming.**
 
 
 **Description:** This server program follows a basic sequence of steps for establishing a network connection. The process includes the creation of a socket, binding it to a specific address and port, and listening for incoming connections. Upon accepting a connection, the server forks a child process to handle the communication with the connected client. The communication is simple, responding with a predefined message. Finally, the server gracefully shuts down when a termination signal (Ctrl+C) is received. The overall structure can be summarized as follows:
