@@ -57,7 +57,8 @@ int main(void)
         return EXIT_FAILURE;
     }
 
-    if (connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) != 0) {
+    /* Connect the client code with the socket_address of the inet_pton connected server */
+    if (connect(sockfd, ((struct sockaddr *) &server_addr), sizeof(server_addr)) != 0) {
         perror("Error connecting to server");
         close(sockfd);
         return EXIT_FAILURE;
@@ -68,6 +69,8 @@ int main(void)
     const char *message = "Hello, Server!";
     send(sockfd, message, strlen(message), 0);
     printf("Sent data to server: %s\n", message);
+
+    sleep(10);
 
     char buffer[BUFFER_SIZE];
     ssize_t received_bytes = recv(sockfd, buffer, sizeof(buffer) - 1, 0);

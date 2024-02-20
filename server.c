@@ -28,7 +28,6 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
 #include <unistd.h>
 #include <signal.h>
 #include <netdb.h>
@@ -44,110 +43,115 @@ void handle_shutdown(int signum)
     shutdown_requested = 1;
 }
 
-void handle_client(int client_socket);
+int handle_client(int client_socket);
 
-void get_server_ip();
+void get_server_ip(void);
 
-int main(void) 
+int main(void)
 {
-    /* Register a signal handler for graceful shutdown */
+    /* Register a singnal handler for the graceful shutdown */
     signal(SIGINT, handle_shutdown);
 
-    /* Create a socket for the server */
+    /* Create a socket file discripter for the server */
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
-        perror("Error creating socket (sys/socket.h)");
+        perror("Error creating a socket file discripter with (sys/system.h)");
         return EXIT_FAILURE;
     }
 
     printf("Socket created successfully as %d\n", sockfd);
-
-    /* Set up the server address structure */
+    
+    /* Set up the server address from the sockaddr_in structure */
     struct sockaddr_in host_addr = {0};
     host_addr.sin_family = AF_INET;
     host_addr.sin_port = htons(PORT);
-    host_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    host_addr.sin_addr.s_addr = htonl(INADDR_ANY); /* Default in address of the host */
 
-    /* Bind the socket to a specific address and port */
-    if (bind(sockfd, (struct sockaddr *)&host_addr, sizeof(host_addr)) != 0) {
-        perror("Error binding socket (sys/socket.h)");
+    /* Bind the socket to a specific address and port, using if(bind and check) */
+    if (bind(sockfd, ((struct sockaddr *) &host_addr), sizeof(host_addr)) != 0) {
+        perror("Error binding socket with the host using (sys/socket.h)");
         close(sockfd);
         return EXIT_FAILURE;
     }
 
-    /* Start listening for incoming connections */
+    /* Make the server to listening for for incomming connetions */
     if (listen(sockfd, MAX_CONNECTIONS) != 0) {
-        perror("Error listening (sys/socket.h)");
+        perror("Error in listening to the incomming connections");
         close(sockfd);
         return EXIT_FAILURE;
     }
 
-    /* Get and print the server's IP address */
+    /* If the struct of the host is done correcly it will be printed,
+    it is not much upto the bind or listen functions*/
+    printf("server listening on the port %d\n", ntohs(host_addr.sin_port));
+
     get_server_ip();
 
-    printf("Server listening on port %d\n", PORT);
-
-    while (!shutdown_requested) {
-        /* Accept a connection from a client */
+    while(!shutdown_requested) {
+        /* Create a client address from the sockaddr_in structure */
         struct sockaddr_in client_addr = {0};
         socklen_t client_addrlen = sizeof(client_addr);
 
-        int client_socket = accept(sockfd, (struct sockaddr *)&client_addr, &client_addrlen);
+        int client_socket = accept(sockfd, ((struct sockaddr *) &client_addr), &client_addrlen);
 
         if (client_socket == -1) {
-            perror("Error accepting connection (sys/socket.h)");
+            perror("Error accepting connection in the server");
             continue;
         }
 
         printf("Connection accepted from %s:%d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
-        /* Create a child process to handle the client */
+        /* Create a child process to handle each client call. */
         if (fork() == 0) {
-            close(sockfd); /* Close the listening socket in the child process */
+            close(sockfd);
             handle_client(client_socket);
             close(client_socket);
             _exit(EXIT_SUCCESS);
         } else {
-            close(client_socket); /* Close the client socket in the parent process */
+            close(client_socket);
         }
+
     }
 
-    /* Gracefully close the server */
     close(sockfd);
-    printf("Server shutting down gracefully.\n");
 
-    return EXIT_SUCCESS;
+    printf("Server shitting down gravefully.\n");
+
+    return 0;
 }
 
-/* Function to handle communication with a connected client */
-void handle_client(int client_socket) 
+
+/* Internal FUnction to handle client comminication inside the server */
+int handle_client(int client_socket)
 {
     char buffer[BUFFER_SIZE];
 
-    /*  "ssize" stands for "signed size." It is commonly employed in functions that perform I/O operations,
-     such as reading or writing data, where the return value indicates the number of bytes processed.
-
-        */
+    /* reading or writing the data, return every bits(bytes) processed  */
     ssize_t received_bytes;
 
     /* Receive data from the client */
     received_bytes = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
     if (received_bytes <= 0) {
         perror("Error receiving data (sys/socket.h)");
-        return;
+        return EXIT_FAILURE;
     }
 
-    buffer[received_bytes] = '\0'; /* Null-terminate the received data */
+    buffer[received_bytes] = '\0';
 
-    /* Assuming a simple response for demonstration purposes */
-    const char *response = "HTTP/1.1 200 OK\r\nContent-Length: 12\r\n\r\nHello, World!\n";
+    printf("Received from the client: %s\n", buffer);
 
-    /* Send the response back to the client */
+    /* Assuming a simple response from the server */
+    const char *response = "Hello, Client!\n";
+
+    /* Send this response to the client */
     send(client_socket, response, strlen(response), 0);
+
+    return 0;
+
 }
 
-/* Function to get and print the server's IP address */
-void get_server_ip(void) 
+/* Function to get and print the (host)server's IP address */
+void get_server_ip(void)
 {
     char hostname[256];
     struct hostent *host_info;
